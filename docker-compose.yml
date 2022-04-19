@@ -1,0 +1,68 @@
+version: '3'
+
+services:
+ web:
+  image: alpnginx
+  container_name: nginx
+  stdin_open: true
+  tty: true
+  restart: always
+  volumes: &secure
+  - ./local:/var/www/html/magento
+  - ./phpsock:/var/run/php
+  ports:
+  - '80:80'
+  networks: 
+  - net
+
+ elasticsearch:
+  image: alpelasticsearch
+  container_name: elasticsearch
+  stdin_open: true
+  tty: true
+  restart: always
+  volumes:
+  - 'elasticsearch_data:/var/lib/elasticsearch/data'
+  ports:
+  - '9200:9200'
+  networks: 
+  - net
+
+ php_server:
+  image: alpinephp
+  container_name: php
+  stdin_open: true
+  tty: true
+  ports:
+  - '9000:9000'
+  volumes: *secure
+  depends_on:
+  - web
+  - elasticsearch
+  - database
+  links:
+  - web
+  - elasticsearch
+  - database
+  networks: 
+  - net
+
+ database:
+  image: alpmysql
+  container_name: mysql
+  volumes:
+  - 'dbdata:/var/lib/mysql'
+  stdin_open: true
+  tty: true
+  restart: always
+  ports:
+  - "3306:3306"
+  networks: 
+  - net
+
+volumes:
+  dbdata:
+  nginx_data:
+  elasticsearch_data:
+networks:
+  net:
